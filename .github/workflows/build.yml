@@ -1,0 +1,38 @@
+name: Build IPA
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen
+
+      - name: Build unsigned app
+        run: |
+          set -o pipefail
+          xcodebuild -project Ninibear.xcodeproj -scheme Ninibear \
+            -configuration Release -derivedDataPath ./dd \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA
+        run: |
+          APP=$(find ./dd -name 'Ninibear.app' -type d | head -1)
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qr Ninibear.ipa Payload
+          echo "IPA ready: $(du -h Ninibear.ipa)"
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ninibear-IPA
+          path: Ninibear.ipa
