@@ -14,6 +14,9 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen
 
+      - name: Downgrade project format
+        run: python3 -c "import re,pathlib; p=pathlib.Path('Ninibear.xcodeproj/project.pbxproj'); s=p.read_text(); s=re.sub(r'objectVersion = \\d+;', 'objectVersion = 60;', s); p.write_text(s)"
+
       - name: Build unsigned app
         run: |
           set -o pipefail
