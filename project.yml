@@ -10,6 +10,7 @@ targets:
       - path: .
         excludes:
           - .github/**/*
+          - .git/**/*
           - README.md
           - project.yml
           - build.yml
@@ -18,8 +19,9 @@ targets:
       path: Info.plist
       properties:
         CFBundleDisplayName: "Ninibear"
-        CFBundleShortVersionString: "0.1.0"
-        CFBundleVersion: "1"
+        CFBundleIconFile: "appicon-1024.png"
+        CFBundleShortVersionString: "0.1.1"
+        CFBundleVersion: "2"
         UILaunchScreen: {}
         ITSAppUsesNonExemptEncryption: false
     settings:
