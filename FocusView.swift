@@ -40,7 +40,7 @@ struct FocusView: View {
                         Text("🐻 Ninibear 动动钟").font(.title3).bold().foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
                         HStack(spacing: 6) {
                             if running {
-                                Image("cursor-working").resizable().frame(width: 24, height: 24)
+                                Image(uiImage: BearAssets.working).resizable().frame(width: 24, height: 24)
                                     .offset(y: workingHop ? -3 : 3)
                                     .animation(.easeInOut(duration: 0.45).repeatForever(autoreverses: true), value: workingHop)
                                     .onAppear { workingHop = true }
@@ -57,7 +57,7 @@ struct FocusView: View {
                             .fill(RadialGradient(colors: [Color.white, Color(red: 0.984, green: 0.933, blue: 0.859)], center: .center, startRadius: 20, endRadius: 180))
                             .frame(width: 290, height: 240)
                             .shadow(color: .brown.opacity(0.12), radius: 10, y: 6)
-                        Image("ninibear-idle")
+                        Image(uiImage: BearAssets.idle)
                             .resizable().scaledToFit().frame(width: 250, height: 210)
                             .scaleEffect(breathe ? 1.03 : 1.0)
                             .offset(y: breathe ? -4 : 0)
@@ -126,7 +126,7 @@ struct FocusView: View {
             if showBreak {
                 Color.black.opacity(0.4).ignoresSafeArea()
                 VStack(spacing: 10) {
-                    Image("ninibear-cup").resizable().scaledToFit().frame(width: 150)
+                    Image(uiImage: BearAssets.cup).resizable().scaledToFit().frame(width: 150)
                         .rotationEffect(.degrees(wiggle ? -4 : 4))
                         .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: wiggle)
                         .onAppear { wiggle = true }
@@ -169,7 +169,7 @@ struct FocusView: View {
                 Text(icon).font(.system(size: 26))
                 Text(name).font(.subheadline).bold().foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
                 HStack(spacing: 4) {
-                    Image(done ? "cursor-link" : "cursor-help").resizable().frame(width: 18, height: 18)
+                    Image(uiImage: done ? BearAssets.link : BearAssets.help).resizable().frame(width: 18, height: 18)
                     Text(done ? "已吃 ✔ 真棒！" : "点我打卡")
                 }
                 .font(.caption2)

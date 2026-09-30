@@ -55,7 +55,7 @@ struct RoomView: View {
                                       y: 200 + 20 * CGFloat(i / 3))
                     }
                     // 小熊
-                    Image("ninibear-idle")
+                    Image(uiImage: BearAssets.idle)
                         .resizable().scaledToFit().frame(width: 120, height: 120)
                         .position(x: UIScreen.main.bounds.width * 0.5, y: 210)
                         .scaleEffect(breathe ? 1.04 : 1.0)
@@ -115,7 +115,7 @@ struct RoomView: View {
                 VStack {
                     Spacer()
                     VStack(spacing: 4) {
-                        Image("ninibear-wave").resizable().scaledToFit().frame(width: 100)
+                        Image(uiImage: BearAssets.wave).resizable().scaledToFit().frame(width: 100)
                             .rotationEffect(.degrees(cheerWiggle ? -8 : 8))
                             .animation(.easeInOut(duration: 0.25).repeatForever(autoreverses: true), value: cheerWiggle)
                         Text(cheerText).font(.callout).bold()
