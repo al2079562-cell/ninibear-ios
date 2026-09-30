@@ -54,7 +54,7 @@ struct FocusView: View {
                     // 小熊舞台（待机呼吸）
                     ZStack {
                         RoundedRectangle(cornerRadius: 32)
-                            .fill(RadialGradient(colors: [Color.white, Color(red: 0.984, green: 0.933, blue: 0.859)], center: .center, startRadius: 20, endRadius: 180))
+                            .fill(Color(red: 1.0, green: 0.965, blue: 0.925))
                             .frame(width: 290, height: 240)
                             .shadow(color: .brown.opacity(0.12), radius: 10, y: 6)
                         Image(uiImage: BearAssets.idle)
@@ -97,8 +97,8 @@ struct FocusView: View {
                             Text(BearStore.today()).font(.caption2).foregroundColor(.brown.opacity(0.5))
                         }
                         HStack(spacing: 12) {
-                            medButton(which: "morning", icon: "🌅", name: "早上", done: store.todayMed.morning)
-                            medButton(which: "evening", icon: "🌙", name: "晚上", done: store.todayMed.evening)
+                            medButton(which: "morning", name: "早上", done: store.todayMed.morning)
+                            medButton(which: "evening", name: "晚上", done: store.todayMed.evening)
                         }
                     }
                     .padding(16)
@@ -107,10 +107,10 @@ struct FocusView: View {
 
                     // 今日小结
                     HStack(spacing: 10) {
-                        statCard(num: "\(store.todayLog.stretch)", label: "起来活动")
-                        statCard(num: "\(store.streak)", label: "连续全勤")
-                        statCard(num: "\(store.todayLog.focus)", label: "专注次数")
-                        statCard(num: "\(store.honey)🍯", label: "我的蜂蜜")
+                        statCard(num: "\(store.todayLog.stretch)", label: "🚶 起来活动")
+                        statCard(num: "\(store.streak)", label: "🔥 连续全勤")
+                        statCard(num: "\(store.todayLog.focus)", label: "🍅 专注次数")
+                        statCard(num: "\(store.honey)", label: "🍯 我的蜂蜜")
                     }
 
                     Text("💡 基于真实时间计时：切去别的 app、锁屏，时间照走，到点系统通知必响。")
@@ -163,13 +163,14 @@ struct FocusView: View {
     @State private var wiggle = false
     @State private var workingHop = false
 
-    private func medButton(which: String, icon: String, name: String, done: Bool) -> some View {
+    private func medButton(which: String, name: String, done: Bool) -> some View {
         Button(action: { store.toggleMed(which) }) {
             VStack(spacing: 4) {
-                Text(icon).font(.system(size: 26))
+                Image(uiImage: BearAssets.wave)
+                    .resizable().frame(width: 34, height: 34)
                 Text(name).font(.subheadline).bold().foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
                 HStack(spacing: 4) {
-                    Image(uiImage: done ? BearAssets.link : BearAssets.help).resizable().frame(width: 18, height: 18)
+                    Image(uiImage: done ? BearAssets.link : BearAssets.help).resizable().frame(width: 20, height: 20)
                     Text(done ? "已吃 ✔ 真棒！" : "点我打卡")
                 }
                 .font(.caption2)

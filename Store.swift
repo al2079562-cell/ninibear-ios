@@ -20,9 +20,10 @@ final class BearStore: ObservableObject {
     @Published var trash: Int         { didSet { ud.set(trash, forKey: "trash") } }
     @Published var strictMode: Bool   { didSet { ud.set(strictMode, forKey: "strict") } }
     @Published var soundOn: Bool      { didSet { ud.set(soundOn, forKey: "sound") } }
-    @Published var meds: [String: MedDay] { didSet { BearStore.save(meds, key: "meds") } }
-    @Published var log: [String: DayLog]  { didSet { BearStore.save(log, key: "log") } }
+    @Published var meds: [String: MedDay] { didSet { save(meds, key: "meds") } }
+    @Published var log: [String: DayLog]  { didSet { save(log, key: "log") } }
     @Published var owned: [String]    { didSet { ud.set(owned, forKey: "owned") } }
+    @Published var equipped: [String: String] { didSet { ud.set(equipped, forKey: "equipped") } }
 
     private init() {
         intervalMin = ud.object(forKey: "intervalMin") as? Int ?? 35
@@ -31,15 +32,17 @@ final class BearStore: ObservableObject {
         strictMode  = ud.object(forKey: "strict") as? Bool ?? false
         soundOn     = ud.object(forKey: "sound") as? Bool ?? true
         owned       = ud.object(forKey: "owned") as? [String] ?? []
-        meds        = BearStore.load([String: MedDay].self, key: "meds") ?? [:]
-        log         = BearStore.load([String: DayLog].self, key: "log") ?? [:]
+        equipped    = ud.object(forKey: "equipped") as? [String: String]
+                      ?? ["seat": "seat-default", "rug": "none", "deco": "none"]
+        meds        = load([String: MedDay].self, key: "meds") ?? [:]
+        log         = load([String: DayLog].self, key: "log") ?? [:]
     }
 
-    private static func save<T: Encodable>(_ v: T, key: String) {
-        if let d = try? JSONEncoder().encode(v) { UserDefaults.standard.set(d, forKey: key) }
+    private func save<T: Encodable>(_ v: T, key: String) {
+        if let d = try? JSONEncoder().encode(v) { ud.set(d, forKey: key) }
     }
-    private static func load<T: Decodable>(_ t: T.Type, key: String) -> T? {
-        guard let d = UserDefaults.standard.data(forKey: key) else { return nil }
+    private func load<T: Decodable>(_ t: T.Type, key: String) -> T? {
+        guard let d = ud.data(forKey: key) else { return nil }
         return try? JSONDecoder().decode(t, from: d)
     }
 
@@ -62,11 +65,15 @@ final class BearStore: ObservableObject {
         return s
     }
 
+    func equip(_ cat: String, _ id: String) {
+        equipped[cat] = id
+    }
+
     func toggleMed(_ which: String) {
         let k = BearStore.today()
         var m = meds[k] ?? MedDay()
         if which == "morning" { m.morning.toggle() } else { m.evening.toggle() }
         meds[k] = m
-        if m.morning && m.evening { honey += 5 }
+        if m.morning && m.evening { honey += 5 }   // 早晚都吃了 +5 蜂蜜
     }
 }
