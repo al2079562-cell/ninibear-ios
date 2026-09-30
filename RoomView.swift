@@ -29,6 +29,9 @@ struct RoomView: View {
             ShopItem(id: "rug-leaf", cat: "rug", name: "大绿叶垫", price: 12, img: BearAssets.rugLeaf),
             ShopItem(id: "deco-lamp", cat: "deco", name: "暖黄落地灯", price: 0, img: BearAssets.lampDefault),
             ShopItem(id: "deco-none", cat: "deco", name: "留白", price: 0, img: UIImage()),
+            ShopItem(id: "deco-table2", cat: "deco", name: "橙橙小边桌", price: 25, img: BearAssets.decoTable2),
+            ShopItem(id: "deco-blue", cat: "deco", name: "蓝调组合", price: 45, img: BearAssets.decoBlue),
+            ShopItem(id: "deco-pudding", cat: "deco", name: "冰爽布丁", price: 30, img: BearAssets.decoPudding),
             ShopItem(id: "deco-cake", cat: "deco", name: "生日蛋糕", price: 25, img: BearAssets.decoCake),
             ShopItem(id: "deco-table", cat: "deco", name: "木桌黑灯", price: 40, img: BearAssets.decoTable),
             ShopItem(id: "deco-red", cat: "deco", name: "红柜甜甜圈灯", price: 45, img: BearAssets.decoRed),
@@ -170,8 +173,13 @@ struct RoomView: View {
                          : id == "deco-table" ? BearAssets.decoTable
                          : id == "deco-red" ? BearAssets.decoRed
                          : id == "deco-basket" ? BearAssets.decoBasket
+                         : id == "deco-table2" ? BearAssets.decoTable2
+                         : id == "deco-blue" ? BearAssets.decoBlue
+                         : id == "deco-pudding" ? BearAssets.decoPudding
                          : BearAssets.lampDefault
-        let w: CGFloat = (id == "deco-cake" || id == "deco-lamp") ? 100 : 190
+        let w: CGFloat = (id == "deco-cake" || id == "deco-lamp") ? 100
+                       : id == "deco-table2" ? 130
+                       : id == "deco-pudding" ? 150 : 190
         return Image(uiImage: img).resizable().scaledToFit().frame(width: w)
     }
 

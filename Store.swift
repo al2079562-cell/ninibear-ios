@@ -28,7 +28,7 @@ final class BearStore: ObservableObject {
 
     private init() {
         intervalMin = ud.object(forKey: "intervalMin") as? Int ?? 35
-        honey       = ud.object(forKey: "honey") as? Int ?? 0
+        honey       = max(ud.object(forKey: "honey") as? Int ?? 0, 50)   // 测试期保底 50
         trash       = ud.object(forKey: "trash") as? Int ?? 0
         strictMode  = ud.object(forKey: "strict") as? Bool ?? false
         soundOn     = ud.object(forKey: "sound") as? Bool ?? true
