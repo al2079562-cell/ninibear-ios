@@ -19,13 +19,15 @@ struct RoomView: View {
 
     var allItems: [ShopItem] {
         [
-            ShopItem(id: "seat-default", cat: "seat", name: "默认绿椅", price: 0, img: BearAssets.idle),
+            ShopItem(id: "seat-default", cat: "seat", name: "经典绿椅", price: 0, img: BearAssets.seatDefault),
             ShopItem(id: "seat-blue", cat: "seat", name: "蓝绒沙发", price: 35, img: BearAssets.seatBlue),
             ShopItem(id: "seat-brown", cat: "seat", name: "复古皮转椅", price: 45, img: BearAssets.seatBrown),
+            ShopItem(id: "rug-purple", cat: "rug", name: "紫色圆毯", price: 0, img: BearAssets.rugPurple),
             ShopItem(id: "rug-none", cat: "rug", name: "素净地板", price: 0, img: UIImage()),
             ShopItem(id: "rug-cookie", cat: "rug", name: "奶油饼干毯", price: 15, img: BearAssets.rugCookie),
             ShopItem(id: "rug-pink", cat: "rug", name: "蓝粉漩涡毯", price: 20, img: BearAssets.rugPink),
             ShopItem(id: "rug-leaf", cat: "rug", name: "大绿叶垫", price: 12, img: BearAssets.rugLeaf),
+            ShopItem(id: "deco-lamp", cat: "deco", name: "暖黄落地灯", price: 0, img: BearAssets.lampDefault),
             ShopItem(id: "deco-none", cat: "deco", name: "留白", price: 0, img: UIImage()),
             ShopItem(id: "deco-cake", cat: "deco", name: "生日蛋糕", price: 25, img: BearAssets.decoCake),
             ShopItem(id: "deco-table", cat: "deco", name: "木桌黑灯", price: 40, img: BearAssets.decoTable),
@@ -126,9 +128,9 @@ struct RoomView: View {
 
     // MARK: 预览舞台
     var previewStage: some View {
-        GeometryReader { g in
+        GeometryReader { g -> AnyView in
             let w = g.size.width
-            ZStack {
+            return AnyView(ZStack {
                 RoundedRectangle(cornerRadius: 24)
                     .fill(Color(red: 0.996, green: 0.965, blue: 0.918))
                 RoundedRectangle(cornerRadius: 24)
@@ -147,7 +149,7 @@ struct RoomView: View {
                         .position(x: w*(0.72 + 0.09*CGFloat(i % 3)),
                                   y: 252 + 8*CGFloat(i / 3))
                 }
-            }
+            })
         }
         .frame(height: 300)
         .clipShape(RoundedRectangle(cornerRadius: 24))
@@ -157,7 +159,8 @@ struct RoomView: View {
         let id = store.equipped["rug"] ?? "none"
         let img: UIImage = id == "rug-cookie" ? BearAssets.rugCookie
                          : id == "rug-pink" ? BearAssets.rugPink
-                         : BearAssets.rugLeaf
+                         : id == "rug-leaf" ? BearAssets.rugLeaf
+                         : BearAssets.rugPurple
         return Image(uiImage: img).resizable().scaledToFit().frame(width: 250)
     }
 
@@ -166,8 +169,9 @@ struct RoomView: View {
         let img: UIImage = id == "deco-cake" ? BearAssets.decoCake
                          : id == "deco-table" ? BearAssets.decoTable
                          : id == "deco-red" ? BearAssets.decoRed
-                         : BearAssets.decoBasket
-        let w: CGFloat = id == "deco-cake" ? 95 : 190
+                         : id == "deco-basket" ? BearAssets.decoBasket
+                         : BearAssets.lampDefault
+        let w: CGFloat = (id == "deco-cake" || id == "deco-lamp") ? 100 : 190
         return Image(uiImage: img).resizable().scaledToFit().frame(width: w)
     }
 
@@ -175,7 +179,7 @@ struct RoomView: View {
         let id = store.equipped["seat"] ?? "seat-default"
         let img: UIImage = id == "seat-blue" ? BearAssets.seatBlue
                          : id == "seat-brown" ? BearAssets.seatBrown
-                         : BearAssets.idle
+                         : BearAssets.seatDefault
         return Image(uiImage: img).resizable().scaledToFit()
             .frame(maxWidth: 300, maxHeight: 245)
     }
@@ -184,7 +188,11 @@ struct RoomView: View {
     func itemCard(_ it: ShopItem) -> some View {
         let owned = it.price == 0 || store.owned.contains(it.id)
         let isEquipped = store.equipped[it.cat] == it.id
-        return VStack(spacing: 6) {
+        return Button(action: {
+            if isEquipped { return }
+            if owned { store.equip(it.cat, it.id) } else { buy(it) }
+        }) {
+        VStack(spacing: 6) {
             if it.img.size.width == 0 {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color(red: 0.98, green: 0.96, blue: 0.93))
@@ -196,27 +204,24 @@ struct RoomView: View {
             Text(it.name).font(.caption).bold()
                 .foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
                 .lineLimit(1)
-            Button(action: {
-                if owned { store.equip(it.cat, it.id) } else { buy(it) }
-            }) {
-                Text(isEquipped ? "已装备" : owned ? "装备" : "\(it.price) 🍯")
-                    .font(.caption2).bold()
-                    .frame(width: 84, height: 24)
-                    .background(isEquipped ? Color.gray.opacity(0.25)
-                                : owned ? Color(red: 0.61, green: 0.80, blue: 0.53)
-                                : (store.honey >= it.price ? Color(red: 0.949, green: 0.702, blue: 0.239)
-                                                           : Color.gray.opacity(0.4)))
-                    .foregroundColor(isEquipped ? .gray
-                                     : owned ? Color(red: 0.24, green: 0.42, blue: 0.18)
-                                     : (store.honey >= it.price ? Color(red: 0.36, green: 0.23, blue: 0.09) : .white))
-                    .cornerRadius(12)
-            }
-            .disabled(isEquipped)
+            Text(isEquipped ? "✓ 已装备" : owned ? "点我装备" : "\(it.price) 🍯 购买")
+                .font(.caption2).bold()
+                .frame(width: 84, height: 24)
+                .background(isEquipped ? Color.gray.opacity(0.25)
+                            : owned ? Color(red: 0.61, green: 0.80, blue: 0.53)
+                            : (store.honey >= it.price ? Color(red: 0.949, green: 0.702, blue: 0.239)
+                                                       : Color.gray.opacity(0.4)))
+                .foregroundColor(isEquipped ? .gray
+                                 : owned ? Color(red: 0.24, green: 0.42, blue: 0.18)
+                                 : (store.honey >= it.price ? Color(red: 0.36, green: 0.23, blue: 0.09) : .white))
+                .cornerRadius(12)
         }
         .frame(width: 96)
         .padding(.vertical, 8)
         .background(Color.white.cornerRadius(16))
         .shadow(color: .brown.opacity(0.08), radius: 6, y: 3)
+        }
+        .buttonStyle(.plain)
     }
 
     private func buy(_ it: ShopItem) {

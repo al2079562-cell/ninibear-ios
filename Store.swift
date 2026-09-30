@@ -4,6 +4,7 @@ import Combine
 struct MedDay: Codable {
     var morning = false
     var evening = false
+    var rewarded = false   // 当天双重打卡奖励是否已领取
 }
 
 struct DayLog: Codable {
@@ -33,7 +34,7 @@ final class BearStore: ObservableObject {
         soundOn     = ud.object(forKey: "sound") as? Bool ?? true
         owned       = ud.object(forKey: "owned") as? [String] ?? []
         equipped    = ud.object(forKey: "equipped") as? [String: String]
-                      ?? ["seat": "seat-default", "rug": "none", "deco": "none"]
+                      ?? ["seat": "seat-default", "rug": "rug-purple", "deco": "deco-lamp"]
         meds        = BearStore.load([String: MedDay].self, key: "meds") ?? [:]
         log         = BearStore.load([String: DayLog].self, key: "log") ?? [:]
     }
@@ -73,7 +74,10 @@ final class BearStore: ObservableObject {
         let k = BearStore.today()
         var m = meds[k] ?? MedDay()
         if which == "morning" { m.morning.toggle() } else { m.evening.toggle() }
+        if m.morning && m.evening && !m.rewarded {
+            honey += 5
+            m.rewarded = true   // 每天只能领一次，反复打卡不再加蜂蜜
+        }
         meds[k] = m
-        if m.morning && m.evening { honey += 5 }
     }
 }
