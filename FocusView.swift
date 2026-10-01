@@ -166,14 +166,13 @@ struct FocusView: View {
     private func medButton(which: String, name: String, done: Bool) -> some View {
         Button(action: { store.toggleMed(which) }) {
             VStack(spacing: 4) {
-                Image(uiImage: BearAssets.wave)
-                    .resizable().frame(width: 34, height: 34)
+                Image(uiImage: done ? BearAssets.link : BearAssets.help)
+                    .resizable().frame(width: 38, height: 38)
+                    .scaleEffect(done ? 1.12 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: done)
                 Text(name).font(.subheadline).bold().foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
-                HStack(spacing: 4) {
-                    Image(uiImage: done ? BearAssets.link : BearAssets.help).resizable().frame(width: 20, height: 20)
-                    Text(done ? "已吃 ✔ 真棒！" : "点我打卡")
-                }
-                .font(.caption2)
+                Text(done ? "已吃 ✔ 真棒！" : "点我打卡")
+                    .font(.caption2)
                     .foregroundColor(done ? Color(red: 0.37, green: 0.60, blue: 0.28) : .brown.opacity(0.5))
             }
             .frame(maxWidth: .infinity).padding(.vertical, 12)
