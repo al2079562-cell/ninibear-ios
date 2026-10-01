@@ -118,8 +118,11 @@ struct BearRoomScene: View {
                          : id == "seatBerry" ? BearAssets.seatBerry
                          : id == "seatCake" ? BearAssets.seatCake
                          : BearAssets.seatDefault
+        // 每把椅子独立比例：绿椅偏小、转椅偏大
+        let hmap: [String: CGFloat] = ["seat-default": 0.80, "seat-brown": 1.00,
+                                       "seatCake": 0.82]
         return Image(uiImage: img).resizable().scaledToFit()
-            .frame(maxWidth: 250, maxHeight: height*0.92)
+            .frame(maxWidth: 250, maxHeight: height*(hmap[id] ?? 0.92))
     }
 }
 

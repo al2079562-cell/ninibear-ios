@@ -12,17 +12,17 @@ struct ContentView: View {
         TabView {
             FocusView()
                 .tabItem {
-                    Image(uiImage: BearAssets.working).renderingMode(.original)
+                    Image(uiImage: BearAssets.tabFocus.withRenderingMode(.alwaysOriginal))
                     Text("专注")
                 }
             RoomView()
                 .tabItem {
-                    Image(uiImage: BearAssets.tabNormal).renderingMode(.original)
+                    Image(uiImage: BearAssets.tabRoom.withRenderingMode(.alwaysOriginal))
                     Text("房间")
                 }
             SettingsView()
                 .tabItem {
-                    Image(uiImage: BearAssets.help).renderingMode(.original)
+                    Image(uiImage: BearAssets.tabSettings.withRenderingMode(.alwaysOriginal))
                     Text("设置")
                 }
         }
