@@ -11,11 +11,20 @@ struct ContentView: View {
     var body: some View {
         TabView {
             FocusView()
-                .tabItem { Text("🍅 专注") }
+                .tabItem {
+                    Image(uiImage: BearAssets.working).renderingMode(.original)
+                    Text("专注")
+                }
             RoomView()
-                .tabItem { Text("🏠 房间") }
+                .tabItem {
+                    Image(uiImage: BearAssets.tabNormal).renderingMode(.original)
+                    Text("房间")
+                }
             SettingsView()
-                .tabItem { Text("⚙️ 设置") }
+                .tabItem {
+                    Image(uiImage: BearAssets.help).renderingMode(.original)
+                    Text("设置")
+                }
         }
         .accentColor(Color(red: 0.95, green: 0.70, blue: 0.24))
     }

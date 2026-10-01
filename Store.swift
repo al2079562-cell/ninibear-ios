@@ -28,13 +28,13 @@ final class BearStore: ObservableObject {
 
     private init() {
         intervalMin = ud.object(forKey: "intervalMin") as? Int ?? 35
-        honey       = max(ud.object(forKey: "honey") as? Int ?? 0, 99)   // 测试期保底 50
+        honey       = max(ud.object(forKey: "honey") as? Int ?? 0, 150)   // 测试期保底 50
         trash       = ud.object(forKey: "trash") as? Int ?? 0
         strictMode  = ud.object(forKey: "strict") as? Bool ?? false
         soundOn     = ud.object(forKey: "sound") as? Bool ?? true
         owned       = ud.object(forKey: "owned") as? [String] ?? []
         equipped    = ud.object(forKey: "equipped") as? [String: String]
-                      ?? ["seat": "seat-default", "rug": "rug-purple", "table": "decoTable2", "lamp": "deco-lamp"]
+                      ?? ["seat": "seat-default", "rug": "rug-purple", "table": "decoTable2", "lamp": "deco-lamp", "wall": "none"]
         meds        = BearStore.load([String: MedDay].self, key: "meds") ?? [:]
         log         = BearStore.load([String: DayLog].self, key: "log") ?? [:]
     }

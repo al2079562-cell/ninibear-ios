@@ -14,30 +14,33 @@ struct BearRoomScene: View {
                     .frame(height: height*0.30)
                     .position(x: w/2, y: height - height*0.15)
 
+                // 墙贴（最底层背景上）
+                if (store.equipped["wall"] ?? "none") != "none" {
+                    wallView.position(x: w*0.30, y: height*0.20)
+                }
                 if (store.equipped["rug"] ?? "none") != "none" {
                     rugView.position(x: w/2, y: height*0.80)
                 }
-                // 桌柜槽（左）
                 if (store.equipped["table"] ?? "none") != "none" {
                     let tid = store.equipped["table"] ?? ""
-                    let ty: CGFloat = tid == "balloonL" ? height*0.50
-                                    : tid == "spoonCat" ? height*0.76
-                                    : height*0.68
-                    tableView.position(x: w*0.15, y: ty)
+                    let ty: CGFloat = tid == "balloonL" ? height*0.54
+                                    : tid == "spoonCat" ? height*0.78
+                                    : height*0.70
+                    tableView.position(x: w*0.14, y: ty)
                 }
-                // 灯具槽（后右）
                 if (store.equipped["lamp"] ?? "none") != "none" {
                     let lid = store.equipped["lamp"] ?? ""
-                    let ly: CGFloat = lid == "sundaeGlass" ? height*0.74
-                                    : lid == "donutLamp2" ? height*0.46
+                    let ly: CGFloat = lid == "sundaeGlass" ? height*0.72
+                                    : lid == "donutLamp2" ? height*0.48
+                                    : lid == "balloonR" ? height*0.44
                                     : height*0.40
-                    lampView.position(x: w*0.74, y: ly)
+                    lampView.position(x: w*0.75, y: ly)
                 }
-                seatView.position(x: w/2, y: height*0.56)
+                seatView.position(x: w/2, y: height*0.58)
                 ForEach(0..<store.trash, id: \.self) { i in
                     Image(uiImage: BearAssets.trashBall)
-                        .resizable().frame(width: 34, height: 34)
-                        .position(x: w*(0.82 + 0.06*CGFloat(i % 3)),
+                        .resizable().frame(width: 32, height: 32)
+                        .position(x: w*(0.84 + 0.05*CGFloat(i % 3)),
                                   y: height*0.88 + 6*CGFloat(i / 3))
                 }
             })
@@ -45,11 +48,23 @@ struct BearRoomScene: View {
         .frame(height: height)
     }
 
+    var wallView: some View {
+        let id = store.equipped["wall"] ?? "none"
+        let img: UIImage = id == "stickerTea" ? BearAssets.stickerTea
+                         : id == "stickerCone" ? BearAssets.stickerCone
+                         : BearAssets.stickerNote
+        let wmap: [String: CGFloat] = ["stickerTea": 72, "stickerCone": 62, "stickerNote": 70]
+        return Image(uiImage: img).resizable().scaledToFit()
+            .frame(width: wmap[id] ?? 70)
+            .opacity(0.9)
+    }
+
     var rugView: some View {
         let id = store.equipped["rug"] ?? "none"
         let img: UIImage = id == "rug-cookie" ? BearAssets.rugCookie
                          : id == "rug-pink" ? BearAssets.rugPink
                          : id == "rug-leaf" ? BearAssets.rugLeaf
+                         : id == "rugFloral" ? BearAssets.rugFloral
                          : BearAssets.rugPurple
         return Image(uiImage: img).resizable().scaledToFit().frame(width: 330)
     }
@@ -61,11 +76,19 @@ struct BearRoomScene: View {
                          : id == "balloonL" ? BearAssets.balloonL
                          : id == "spoonCat" ? BearAssets.spoonCat
                          : id == "redCab2" ? BearAssets.redCab2
+                         : id == "stonePot" ? BearAssets.stonePot
+                         : id == "pumpkin" ? BearAssets.pumpkin
                          : BearAssets.decoTable2
-        let wmap: [String: CGFloat] = ["plantTable": 135, "roundTable": 120,
-                                       "balloonL": 105, "spoonCat": 48, "redCab2": 135]
-        return Image(uiImage: img).resizable().scaledToFit()
-            .frame(width: wmap[id] ?? 130)
+        // 气球用高度控制（高款），其余用宽度（小一点）
+        if id == "balloonL" {
+            return AnyView(Image(uiImage: img).resizable().scaledToFit()
+                .frame(height: 185))
+        }
+        let wmap: [String: CGFloat] = ["plantTable": 115, "roundTable": 105,
+                                       "spoonCat": 42, "redCab2": 115,
+                                       "stonePot": 110, "pumpkin": 95]
+        return AnyView(Image(uiImage: img).resizable().scaledToFit()
+            .frame(width: wmap[id] ?? 110))
     }
 
     var lampView: some View {
@@ -75,27 +98,35 @@ struct BearRoomScene: View {
                          : id == "balloonR" ? BearAssets.balloonR
                          : id == "donutLamp2" ? BearAssets.donutLamp2
                          : id == "sundaeGlass" ? BearAssets.sundaeGlass
+                         : id == "streetLamp" ? BearAssets.streetLamp
+                         : id == "curveLamp" ? BearAssets.curveLamp
                          : BearAssets.lampDefault
-        let wmap: [String: CGFloat] = ["twinLamp": 100, "greenLamp": 100,
-                                       "balloonR": 105, "donutLamp2": 95, "sundaeGlass": 90]
+        // 灯具一律按高度给足（灯要大、完整）
+        let hmap: [String: CGFloat] = ["twinLamp": 205, "greenLamp": 200,
+                                       "balloonR": 190, "donutLamp2": 150,
+                                       "sundaeGlass": 90, "streetLamp": 210,
+                                       "curveLamp": 205]
         return Image(uiImage: img).resizable().scaledToFit()
-            .frame(width: wmap[id] ?? 105)
+            .frame(height: hmap[id] ?? 200)
     }
 
     var seatView: some View {
         let id = store.equipped["seat"] ?? "seat-default"
         let img: UIImage = id == "seat-blue" ? BearAssets.seatBlue
                          : id == "seat-brown" ? BearAssets.seatBrown
+                         : id == "seatRock" ? BearAssets.seatRock
+                         : id == "seatBerry" ? BearAssets.seatBerry
+                         : id == "seatCake" ? BearAssets.seatCake
                          : BearAssets.seatDefault
         return Image(uiImage: img).resizable().scaledToFit()
-            .frame(maxWidth: 240, maxHeight: height*0.86)
+            .frame(maxWidth: 250, maxHeight: height*0.92)
     }
 }
 
 // MARK: - 商品
 struct ShopItem: Identifiable {
     let id: String
-    let cat: String     // seat / rug / table / lamp
+    let cat: String
     let name: String
     let price: Int
     let img: UIImage
@@ -109,25 +140,31 @@ struct RoomView: View {
     @State private var cheerText = "真棒！"
     @State private var cheerWiggle = false
 
-    let cats: [(String, String)] = [("seat", "🪑 座椅"), ("rug", "🧶 地毯"),
-                                    ("table", "🍵 桌柜"), ("lamp", "💡 灯具")]
+    let cats: [(String, String)] = [("seat", "🪑"), ("rug", "🧶"), ("table", "🍵"),
+                                    ("lamp", "💡"), ("wall", "🖼")]
 
     var allItems: [ShopItem] {
         [
             ShopItem(id: "seat-default", cat: "seat", name: "经典绿椅", price: 0, img: BearAssets.seatDefault, card: BearAssets.seatDefaultClean),
             ShopItem(id: "seat-blue", cat: "seat", name: "蓝绒沙发", price: 35, img: BearAssets.seatBlue, card: BearAssets.seatBlueClean),
             ShopItem(id: "seat-brown", cat: "seat", name: "复古皮转椅", price: 45, img: BearAssets.seatBrown, card: BearAssets.seatBrownClean),
+            ShopItem(id: "seatRock", cat: "seat", name: "奶奶的摇椅", price: 40, img: BearAssets.seatRock, card: BearAssets.seatRockClean),
+            ShopItem(id: "seatBerry", cat: "seat", name: "草莓味沙发", price: 35, img: BearAssets.seatBerry, card: BearAssets.seatBerryClean),
+            ShopItem(id: "seatCake", cat: "seat", name: "生日蛋糕座", price: 50, img: BearAssets.seatCake, card: BearAssets.seatCakeClean),
             ShopItem(id: "rug-purple", cat: "rug", name: "紫色圆毯", price: 0, img: BearAssets.rugPurple, card: BearAssets.rugPurple),
             ShopItem(id: "rug-none", cat: "rug", name: "素净地板", price: 0, img: UIImage(), card: UIImage()),
             ShopItem(id: "rug-cookie", cat: "rug", name: "奶油饼干毯", price: 15, img: BearAssets.rugCookie, card: BearAssets.rugCookie),
             ShopItem(id: "rug-pink", cat: "rug", name: "蓝粉漩涡毯", price: 20, img: BearAssets.rugPink, card: BearAssets.rugPink),
             ShopItem(id: "rug-leaf", cat: "rug", name: "大绿叶垫", price: 12, img: BearAssets.rugLeaf, card: BearAssets.rugLeaf),
+            ShopItem(id: "rugFloral", cat: "rug", name: "外婆家的地毯", price: 20, img: BearAssets.rugFloral, card: BearAssets.rugFloral),
             ShopItem(id: "decoTable2", cat: "table", name: "橙橙小边桌", price: 0, img: BearAssets.decoTable2, card: BearAssets.decoTable2),
             ShopItem(id: "plantTable", cat: "table", name: "边几盆栽", price: 20, img: BearAssets.plantTable, card: BearAssets.plantTable),
             ShopItem(id: "roundTable", cat: "table", name: "小圆边几", price: 20, img: BearAssets.roundTable, card: BearAssets.roundTable),
             ShopItem(id: "balloonL", cat: "table", name: "缤纷气球组", price: 25, img: BearAssets.balloonL, card: BearAssets.balloonL),
             ShopItem(id: "spoonCat", cat: "table", name: "猫耳木勺", price: 10, img: BearAssets.spoonCat, card: BearAssets.spoonCat),
             ShopItem(id: "redCab2", cat: "table", name: "复古红柜", price: 25, img: BearAssets.redCab2, card: BearAssets.redCab2),
+            ShopItem(id: "stonePot", cat: "table", name: "石质花钵", price: 25, img: BearAssets.stonePot, card: BearAssets.stonePot),
+            ShopItem(id: "pumpkin", cat: "table", name: "拼布南瓜", price: 15, img: BearAssets.pumpkin, card: BearAssets.pumpkin),
             ShopItem(id: "table-none", cat: "table", name: "留白", price: 0, img: UIImage(), card: UIImage()),
             ShopItem(id: "deco-lamp", cat: "lamp", name: "暖黄落地灯", price: 0, img: BearAssets.lampDefault, card: BearAssets.lampDefault),
             ShopItem(id: "twinLamp", cat: "lamp", name: "双头落地灯", price: 20, img: BearAssets.twinLamp, card: BearAssets.twinLamp),
@@ -135,7 +172,13 @@ struct RoomView: View {
             ShopItem(id: "balloonR", cat: "lamp", name: "星星气球组", price: 25, img: BearAssets.balloonR, card: BearAssets.balloonR),
             ShopItem(id: "donutLamp2", cat: "lamp", name: "甜甜圈气球灯", price: 25, img: BearAssets.donutLamp2, card: BearAssets.donutLamp2),
             ShopItem(id: "sundaeGlass", cat: "lamp", name: "冰品玻璃杯", price: 15, img: BearAssets.sundaeGlass, card: BearAssets.sundaeGlass),
+            ShopItem(id: "streetLamp", cat: "lamp", name: "复古双头路灯", price: 30, img: BearAssets.streetLamp, card: BearAssets.streetLamp),
+            ShopItem(id: "curveLamp", cat: "lamp", name: "弯杆落地灯", price: 25, img: BearAssets.curveLamp, card: BearAssets.curveLamp),
             ShopItem(id: "lamp-none", cat: "lamp", name: "留白", price: 0, img: UIImage(), card: UIImage()),
+            ShopItem(id: "wall-none", cat: "wall", name: "留白", price: 0, img: UIImage(), card: UIImage()),
+            ShopItem(id: "stickerTea", cat: "wall", name: "茶杯贴纸", price: 10, img: BearAssets.stickerTea, card: BearAssets.stickerTea),
+            ShopItem(id: "stickerCone", cat: "wall", name: "甜筒贴纸", price: 10, img: BearAssets.stickerCone, card: BearAssets.stickerCone),
+            ShopItem(id: "stickerNote", cat: "wall", name: "便签贴纸", price: 8, img: BearAssets.stickerNote, card: BearAssets.stickerNote),
         ]
     }
 
@@ -165,25 +208,24 @@ struct RoomView: View {
                         .stroke(Color(red: 0.922, green: 0.863, blue: 0.784), lineWidth: 2))
                     .padding(.horizontal)
 
-                HStack(spacing: 8) {
-                    ForEach(cats, id: \.0) { c in
-                        Button(action: { cat = c.0 }) {
-                            Text(c.1)
-                                .font(.callout).bold()
-                                .padding(.horizontal, 12).padding(.vertical, 7)
-                                .background(cat == c.0
-                                            ? Color(red: 0.949, green: 0.702, blue: 0.239)
-                                            : Color.white)
-                                .foregroundColor(cat == c.0
-                                                 ? Color(red: 0.36, green: 0.23, blue: 0.09)
-                                                 : Color(red: 0.545, green: 0.369, blue: 0.235))
-                                .cornerRadius(16)
-                                .shadow(color: .brown.opacity(0.08), radius: 4, y: 2)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(cats, id: \.0) { c in
+                            Button(action: { cat = c.0 }) {
+                                Text(c.1)
+                                    .font(.title3)
+                                    .frame(width: 52, height: 40)
+                                    .background(cat == c.0
+                                                ? Color(red: 0.949, green: 0.702, blue: 0.239)
+                                                : Color.white)
+                                    .cornerRadius(14)
+                                    .shadow(color: .brown.opacity(0.08), radius: 4, y: 2)
+                            }
                         }
                     }
-                    Spacer()
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
+                .frame(height: 44)
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
