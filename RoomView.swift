@@ -36,7 +36,8 @@ struct BearRoomScene: View {
                                     : height*0.40
                     lampView.position(x: w*0.75, y: ly)
                 }
-                seatView.position(x: w/2, y: height*0.58)
+                let seatH = seatHeight(store.equipped["seat"] ?? "seat-default")
+                seatView.position(x: w/2, y: height*0.86 - seatH/2)
                 ForEach(0..<store.trash, id: \.self) { i in
                     Image(uiImage: BearAssets.trashBall)
                         .resizable().frame(width: 32, height: 32)
@@ -110,6 +111,18 @@ struct BearRoomScene: View {
             .frame(height: hmap[id] ?? 200)
     }
 
+    // 每把椅子的绝对显示高度（pt）：房间和主页完全一致
+    // 已按画布留白校准视觉大小：绿椅175 / 沙发250 / 转椅235 / 摇椅245 / 蛋糕165
+    func seatHeight(_ id: String) -> CGFloat {
+        switch id {
+        case "seat-blue", "seatBerry": return 250
+        case "seat-brown": return 235
+        case "seatRock": return 245
+        case "seatCake": return 165
+        default: return 175
+        }
+    }
+
     var seatView: some View {
         let id = store.equipped["seat"] ?? "seat-default"
         let img: UIImage = id == "seat-blue" ? BearAssets.seatBlue
@@ -118,11 +131,8 @@ struct BearRoomScene: View {
                          : id == "seatBerry" ? BearAssets.seatBerry
                          : id == "seatCake" ? BearAssets.seatCake
                          : BearAssets.seatDefault
-        // 每把椅子独立比例：绿椅偏小、转椅偏大
-        let hmap: [String: CGFloat] = ["seat-default": 0.80, "seat-brown": 1.00,
-                                       "seatCake": 0.82]
         return Image(uiImage: img).resizable().scaledToFit()
-            .frame(maxWidth: 250, maxHeight: height*(hmap[id] ?? 0.92))
+            .frame(maxWidth: 270, maxHeight: seatHeight(id))
     }
 }
 
@@ -249,7 +259,7 @@ struct RoomView: View {
                 VStack {
                     Spacer()
                     VStack(spacing: 4) {
-                        Image(uiImage: BearAssets.wave).resizable().scaledToFit().frame(width: 100)
+                        Image(uiImage: BearAssets.cheerHeart).resizable().scaledToFit().frame(width: 110)
                             .rotationEffect(.degrees(cheerWiggle ? -8 : 8))
                             .animation(.easeInOut(duration: 0.25).repeatForever(autoreverses: true), value: cheerWiggle)
                         Text(cheerText).font(.callout).bold()
