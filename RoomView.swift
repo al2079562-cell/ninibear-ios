@@ -26,7 +26,7 @@ struct BearRoomScene: View {
                     let ty: CGFloat = tid == "balloonL" ? height*0.54
                                     : tid == "spoonCat" ? height*0.78
                                     : height*0.70
-                    tableView.position(x: w*0.14, y: ty)
+                    tableView.position(x: w*0.20, y: ty)
                 }
                 if (store.equipped["lamp"] ?? "none") != "none" {
                     let lid = store.equipped["lamp"] ?? ""
@@ -37,7 +37,7 @@ struct BearRoomScene: View {
                     lampView.position(x: w*0.75, y: ly)
                 }
                 let seatH = seatHeight(store.equipped["seat"] ?? "seat-default")
-                seatView.position(x: w/2, y: height*0.86 - seatH/2)
+                seatView.position(x: w/2, y: height*0.94 - seatH/2)
                 ForEach(0..<store.trash, id: \.self) { i in
                     Image(uiImage: BearAssets.trashBall)
                         .resizable().frame(width: 32, height: 32)
@@ -115,11 +115,12 @@ struct BearRoomScene: View {
     // 已按画布留白校准视觉大小：绿椅175 / 沙发250 / 转椅235 / 摇椅245 / 蛋糕165
     func seatHeight(_ id: String) -> CGFloat {
         switch id {
-        case "seat-blue", "seatBerry": return 250
-        case "seat-brown": return 235
-        case "seatRock": return 245
-        case "seatCake": return 165
-        default: return 175
+        case "seat-blue": return 196
+        case "seatBerry": return 201
+        case "seat-brown": return 207
+        case "seatRock": return 197
+        case "seatCake": return 235
+        default: return 181
         }
     }
 
