@@ -34,7 +34,7 @@ final class BearStore: ObservableObject {
         soundOn     = ud.object(forKey: "sound") as? Bool ?? true
         owned       = ud.object(forKey: "owned") as? [String] ?? []
         equipped    = ud.object(forKey: "equipped") as? [String: String]
-                      ?? ["seat": "seat-default", "rug": "rug-purple", "deco": "deco-lamp"]
+                      ?? ["seat": "seat-default", "rug": "rug-purple", "table": "decoTable2", "lamp": "deco-lamp"]
         meds        = BearStore.load([String: MedDay].self, key: "meds") ?? [:]
         log         = BearStore.load([String: DayLog].self, key: "log") ?? [:]
     }

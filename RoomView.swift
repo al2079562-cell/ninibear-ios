@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - 共享小熊场景（主页 & 房间页共用：换组件两边同步）
+// MARK: - 共享小熊场景（主页 & 房间页共用）
 struct BearRoomScene: View {
     @ObservedObject var store = BearStore.shared
     var height: CGFloat = 300
@@ -9,29 +9,36 @@ struct BearRoomScene: View {
         GeometryReader { g -> AnyView in
             let w = g.size.width
             return AnyView(ZStack {
-                // 地板
                 Rectangle()
                     .fill(Color(red: 0.96, green: 0.90, blue: 0.81))
                     .frame(height: height*0.30)
                     .position(x: w/2, y: height - height*0.15)
 
                 if (store.equipped["rug"] ?? "none") != "none" {
-                    rugView.position(x: w/2, y: height*0.78)
+                    rugView.position(x: w/2, y: height*0.80)
                 }
-                // 内置小边桌（左）
-                Image(uiImage: BearAssets.decoTable2)
-                    .resizable().scaledToFit().frame(width: w*0.30)
-                    .position(x: w*0.15, y: height*0.66)
-                // 摆件（椅子后右侧）
-                if (store.equipped["deco"] ?? "none") != "none" {
-                    decoView.position(x: w*0.72, y: height*0.36)
+                // 桌柜槽（左）
+                if (store.equipped["table"] ?? "none") != "none" {
+                    let tid = store.equipped["table"] ?? ""
+                    let ty: CGFloat = tid == "balloonL" ? height*0.50
+                                    : tid == "spoonCat" ? height*0.76
+                                    : height*0.68
+                    tableView.position(x: w*0.15, y: ty)
                 }
-                seatView.position(x: w/2, y: height*0.54)
+                // 灯具槽（后右）
+                if (store.equipped["lamp"] ?? "none") != "none" {
+                    let lid = store.equipped["lamp"] ?? ""
+                    let ly: CGFloat = lid == "sundaeGlass" ? height*0.74
+                                    : lid == "donutLamp2" ? height*0.46
+                                    : height*0.40
+                    lampView.position(x: w*0.74, y: ly)
+                }
+                seatView.position(x: w/2, y: height*0.56)
                 ForEach(0..<store.trash, id: \.self) { i in
                     Image(uiImage: BearAssets.trashBall)
                         .resizable().frame(width: 34, height: 34)
-                        .position(x: w*(0.80 + 0.07*CGFloat(i % 3)),
-                                  y: height*0.86 + 6*CGFloat(i / 3))
+                        .position(x: w*(0.82 + 0.06*CGFloat(i % 3)),
+                                  y: height*0.88 + 6*CGFloat(i / 3))
                 }
             })
         }
@@ -47,31 +54,32 @@ struct BearRoomScene: View {
         return Image(uiImage: img).resizable().scaledToFit().frame(width: 330)
     }
 
-    var decoView: some View {
-        let id = store.equipped["deco"] ?? "none"
-        let img: UIImage = id == "decoBlueLamp" ? BearAssets.decoBlueLamp
-                         : id == "decoProfLamp" ? BearAssets.decoProfLamp
-                         : id == "decoVintageLamp" ? BearAssets.decoVintageLamp
-                         : id == "decoDonut" ? BearAssets.decoDonut
-                         : id == "decoBlueTable" ? BearAssets.decoBlueTable
-                         : id == "decoProfTable" ? BearAssets.decoProfTable
-                         : id == "decoRedCab" ? BearAssets.decoRedCab
-                         : id == "decoCatBasket" ? BearAssets.decoCatBasket
-                         : id == "decoSundae" ? BearAssets.decoSundae
-                         : id == "decoSpoon" ? BearAssets.decoSpoon
-                         : id == "decoCake" ? BearAssets.decoCake
-                         : BearAssets.lampDefault
-        return Image(uiImage: img).resizable().scaledToFit().frame(width: decoWidth(id))
+    var tableView: some View {
+        let id = store.equipped["table"] ?? "decoTable2"
+        let img: UIImage = id == "plantTable" ? BearAssets.plantTable
+                         : id == "roundTable" ? BearAssets.roundTable
+                         : id == "balloonL" ? BearAssets.balloonL
+                         : id == "spoonCat" ? BearAssets.spoonCat
+                         : id == "redCab2" ? BearAssets.redCab2
+                         : BearAssets.decoTable2
+        let wmap: [String: CGFloat] = ["plantTable": 135, "roundTable": 120,
+                                       "balloonL": 105, "spoonCat": 48, "redCab2": 135]
+        return Image(uiImage: img).resizable().scaledToFit()
+            .frame(width: wmap[id] ?? 130)
     }
 
-    func decoWidth(_ id: String) -> CGFloat {
-        switch id {
-        case "decoSpoon": return 50
-        case "decoSundae", "decoCake": return 95
-        case "decoBlueTable", "decoProfTable": return 125
-        case "decoRedCab", "decoCatBasket": return 135
-        default: return 105   // 灯类
-        }
+    var lampView: some View {
+        let id = store.equipped["lamp"] ?? "deco-lamp"
+        let img: UIImage = id == "twinLamp" ? BearAssets.twinLamp
+                         : id == "greenLamp" ? BearAssets.greenLamp
+                         : id == "balloonR" ? BearAssets.balloonR
+                         : id == "donutLamp2" ? BearAssets.donutLamp2
+                         : id == "sundaeGlass" ? BearAssets.sundaeGlass
+                         : BearAssets.lampDefault
+        let wmap: [String: CGFloat] = ["twinLamp": 100, "greenLamp": 100,
+                                       "balloonR": 105, "donutLamp2": 95, "sundaeGlass": 90]
+        return Image(uiImage: img).resizable().scaledToFit()
+            .frame(width: wmap[id] ?? 105)
     }
 
     var seatView: some View {
@@ -80,14 +88,14 @@ struct BearRoomScene: View {
                          : id == "seat-brown" ? BearAssets.seatBrown
                          : BearAssets.seatDefault
         return Image(uiImage: img).resizable().scaledToFit()
-            .frame(maxWidth: 260, maxHeight: height*0.78)
+            .frame(maxWidth: 240, maxHeight: height*0.86)
     }
 }
 
 // MARK: - 商品
 struct ShopItem: Identifiable {
     let id: String
-    let cat: String
+    let cat: String     // seat / rug / table / lamp
     let name: String
     let price: Int
     let img: UIImage
@@ -101,7 +109,8 @@ struct RoomView: View {
     @State private var cheerText = "真棒！"
     @State private var cheerWiggle = false
 
-    let cats: [(String, String)] = [("seat", "🪑 座椅"), ("rug", "🧶 地毯"), ("deco", "🎂 摆件")]
+    let cats: [(String, String)] = [("seat", "🪑 座椅"), ("rug", "🧶 地毯"),
+                                    ("table", "🍵 桌柜"), ("lamp", "💡 灯具")]
 
     var allItems: [ShopItem] {
         [
@@ -113,19 +122,20 @@ struct RoomView: View {
             ShopItem(id: "rug-cookie", cat: "rug", name: "奶油饼干毯", price: 15, img: BearAssets.rugCookie, card: BearAssets.rugCookie),
             ShopItem(id: "rug-pink", cat: "rug", name: "蓝粉漩涡毯", price: 20, img: BearAssets.rugPink, card: BearAssets.rugPink),
             ShopItem(id: "rug-leaf", cat: "rug", name: "大绿叶垫", price: 12, img: BearAssets.rugLeaf, card: BearAssets.rugLeaf),
-            ShopItem(id: "deco-lamp", cat: "deco", name: "暖黄落地灯", price: 0, img: BearAssets.lampDefault, card: BearAssets.lampDefault),
-            ShopItem(id: "deco-none", cat: "deco", name: "留白", price: 0, img: UIImage(), card: UIImage()),
-            ShopItem(id: "decoBlueLamp", cat: "deco", name: "青苹落地灯", price: 20, img: BearAssets.decoBlueLamp, card: BearAssets.decoBlueLamp),
-            ShopItem(id: "decoProfLamp", cat: "deco", name: "黑铁工作灯", price: 20, img: BearAssets.decoProfLamp, card: BearAssets.decoProfLamp),
-            ShopItem(id: "decoVintageLamp", cat: "deco", name: "复古流苏灯", price: 25, img: BearAssets.decoVintageLamp, card: BearAssets.decoVintageLamp),
-            ShopItem(id: "decoDonut", cat: "deco", name: "甜甜圈气球灯", price: 25, img: BearAssets.decoDonut, card: BearAssets.decoDonut),
-            ShopItem(id: "decoBlueTable", cat: "deco", name: "小圆茶几", price: 20, img: BearAssets.decoBlueTable, card: BearAssets.decoBlueTable),
-            ShopItem(id: "decoProfTable", cat: "deco", name: "木边桌", price: 20, img: BearAssets.decoProfTable, card: BearAssets.decoProfTable),
-            ShopItem(id: "decoRedCab", cat: "deco", name: "复古红柜", price: 25, img: BearAssets.decoRedCab, card: BearAssets.decoRedCab),
-            ShopItem(id: "decoCatBasket", cat: "deco", name: "猫篮窝", price: 25, img: BearAssets.decoCatBasket, card: BearAssets.decoCatBasket),
-            ShopItem(id: "decoSundae", cat: "deco", name: "冰爽布丁", price: 20, img: BearAssets.decoSundae, card: BearAssets.decoSundae),
-            ShopItem(id: "decoSpoon", cat: "deco", name: "猫耳木勺", price: 10, img: BearAssets.decoSpoon, card: BearAssets.decoSpoon),
-            ShopItem(id: "decoCake", cat: "deco", name: "生日蛋糕", price: 25, img: BearAssets.decoCake, card: BearAssets.decoCake),
+            ShopItem(id: "decoTable2", cat: "table", name: "橙橙小边桌", price: 0, img: BearAssets.decoTable2, card: BearAssets.decoTable2),
+            ShopItem(id: "plantTable", cat: "table", name: "边几盆栽", price: 20, img: BearAssets.plantTable, card: BearAssets.plantTable),
+            ShopItem(id: "roundTable", cat: "table", name: "小圆边几", price: 20, img: BearAssets.roundTable, card: BearAssets.roundTable),
+            ShopItem(id: "balloonL", cat: "table", name: "缤纷气球组", price: 25, img: BearAssets.balloonL, card: BearAssets.balloonL),
+            ShopItem(id: "spoonCat", cat: "table", name: "猫耳木勺", price: 10, img: BearAssets.spoonCat, card: BearAssets.spoonCat),
+            ShopItem(id: "redCab2", cat: "table", name: "复古红柜", price: 25, img: BearAssets.redCab2, card: BearAssets.redCab2),
+            ShopItem(id: "table-none", cat: "table", name: "留白", price: 0, img: UIImage(), card: UIImage()),
+            ShopItem(id: "deco-lamp", cat: "lamp", name: "暖黄落地灯", price: 0, img: BearAssets.lampDefault, card: BearAssets.lampDefault),
+            ShopItem(id: "twinLamp", cat: "lamp", name: "双头落地灯", price: 20, img: BearAssets.twinLamp, card: BearAssets.twinLamp),
+            ShopItem(id: "greenLamp", cat: "lamp", name: "绿罩落地灯", price: 20, img: BearAssets.greenLamp, card: BearAssets.greenLamp),
+            ShopItem(id: "balloonR", cat: "lamp", name: "星星气球组", price: 25, img: BearAssets.balloonR, card: BearAssets.balloonR),
+            ShopItem(id: "donutLamp2", cat: "lamp", name: "甜甜圈气球灯", price: 25, img: BearAssets.donutLamp2, card: BearAssets.donutLamp2),
+            ShopItem(id: "sundaeGlass", cat: "lamp", name: "冰品玻璃杯", price: 15, img: BearAssets.sundaeGlass, card: BearAssets.sundaeGlass),
+            ShopItem(id: "lamp-none", cat: "lamp", name: "留白", price: 0, img: UIImage(), card: UIImage()),
         ]
     }
 
@@ -155,12 +165,12 @@ struct RoomView: View {
                         .stroke(Color(red: 0.922, green: 0.863, blue: 0.784), lineWidth: 2))
                     .padding(.horizontal)
 
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     ForEach(cats, id: \.0) { c in
                         Button(action: { cat = c.0 }) {
                             Text(c.1)
                                 .font(.callout).bold()
-                                .padding(.horizontal, 14).padding(.vertical, 7)
+                                .padding(.horizontal, 12).padding(.vertical, 7)
                                 .background(cat == c.0
                                             ? Color(red: 0.949, green: 0.702, blue: 0.239)
                                             : Color.white)
