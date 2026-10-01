@@ -1,12 +1,97 @@
 import SwiftUI
 
+// MARK: - 共享小熊场景（主页 & 房间页共用：换组件两边同步）
+struct BearRoomScene: View {
+    @ObservedObject var store = BearStore.shared
+    var height: CGFloat = 300
+
+    var body: some View {
+        GeometryReader { g -> AnyView in
+            let w = g.size.width
+            return AnyView(ZStack {
+                // 地板
+                Rectangle()
+                    .fill(Color(red: 0.96, green: 0.90, blue: 0.81))
+                    .frame(height: height*0.30)
+                    .position(x: w/2, y: height - height*0.15)
+
+                if (store.equipped["rug"] ?? "none") != "none" {
+                    rugView.position(x: w/2, y: height*0.78)
+                }
+                // 内置小边桌（左）
+                Image(uiImage: BearAssets.decoTable2)
+                    .resizable().scaledToFit().frame(width: w*0.30)
+                    .position(x: w*0.15, y: height*0.66)
+                // 摆件（椅子后右侧）
+                if (store.equipped["deco"] ?? "none") != "none" {
+                    decoView.position(x: w*0.72, y: height*0.36)
+                }
+                seatView.position(x: w/2, y: height*0.54)
+                ForEach(0..<store.trash, id: \.self) { i in
+                    Image(uiImage: BearAssets.trashBall)
+                        .resizable().frame(width: 34, height: 34)
+                        .position(x: w*(0.80 + 0.07*CGFloat(i % 3)),
+                                  y: height*0.86 + 6*CGFloat(i / 3))
+                }
+            })
+        }
+        .frame(height: height)
+    }
+
+    var rugView: some View {
+        let id = store.equipped["rug"] ?? "none"
+        let img: UIImage = id == "rug-cookie" ? BearAssets.rugCookie
+                         : id == "rug-pink" ? BearAssets.rugPink
+                         : id == "rug-leaf" ? BearAssets.rugLeaf
+                         : BearAssets.rugPurple
+        return Image(uiImage: img).resizable().scaledToFit().frame(width: 330)
+    }
+
+    var decoView: some View {
+        let id = store.equipped["deco"] ?? "none"
+        let img: UIImage = id == "decoBlueLamp" ? BearAssets.decoBlueLamp
+                         : id == "decoProfLamp" ? BearAssets.decoProfLamp
+                         : id == "decoVintageLamp" ? BearAssets.decoVintageLamp
+                         : id == "decoDonut" ? BearAssets.decoDonut
+                         : id == "decoBlueTable" ? BearAssets.decoBlueTable
+                         : id == "decoProfTable" ? BearAssets.decoProfTable
+                         : id == "decoRedCab" ? BearAssets.decoRedCab
+                         : id == "decoCatBasket" ? BearAssets.decoCatBasket
+                         : id == "decoSundae" ? BearAssets.decoSundae
+                         : id == "decoSpoon" ? BearAssets.decoSpoon
+                         : id == "decoCake" ? BearAssets.decoCake
+                         : BearAssets.lampDefault
+        return Image(uiImage: img).resizable().scaledToFit().frame(width: decoWidth(id))
+    }
+
+    func decoWidth(_ id: String) -> CGFloat {
+        switch id {
+        case "decoSpoon": return 50
+        case "decoSundae", "decoCake": return 95
+        case "decoBlueTable", "decoProfTable": return 125
+        case "decoRedCab", "decoCatBasket": return 135
+        default: return 105   // 灯类
+        }
+    }
+
+    var seatView: some View {
+        let id = store.equipped["seat"] ?? "seat-default"
+        let img: UIImage = id == "seat-blue" ? BearAssets.seatBlue
+                         : id == "seat-brown" ? BearAssets.seatBrown
+                         : BearAssets.seatDefault
+        return Image(uiImage: img).resizable().scaledToFit()
+            .frame(maxWidth: 260, maxHeight: height*0.78)
+    }
+}
+
+// MARK: - 商品
 struct ShopItem: Identifiable {
     let id: String
     let cat: String
     let name: String
     let price: Int
-    let img: UIImage      // 预览图（座椅含熊）
-    let card: UIImage     // 卡片图（座椅不含熊）
+    let img: UIImage
+    let card: UIImage
 }
 
 struct RoomView: View {
@@ -16,7 +101,7 @@ struct RoomView: View {
     @State private var cheerText = "真棒！"
     @State private var cheerWiggle = false
 
-    let cats: [(String, String)] = [("seat", "🪑 座椅"), ("rug", "🧶 地毯"), ("deco", "摆件")]
+    let cats: [(String, String)] = [("seat", "🪑 座椅"), ("rug", "🧶 地毯"), ("deco", "🎂 摆件")]
 
     var allItems: [ShopItem] {
         [
@@ -30,12 +115,17 @@ struct RoomView: View {
             ShopItem(id: "rug-leaf", cat: "rug", name: "大绿叶垫", price: 12, img: BearAssets.rugLeaf, card: BearAssets.rugLeaf),
             ShopItem(id: "deco-lamp", cat: "deco", name: "暖黄落地灯", price: 0, img: BearAssets.lampDefault, card: BearAssets.lampDefault),
             ShopItem(id: "deco-none", cat: "deco", name: "留白", price: 0, img: UIImage(), card: UIImage()),
-            ShopItem(id: "deco-blue", cat: "deco", name: "蓝调组合", price: 45, img: BearAssets.decoBlue, card: BearAssets.decoBlue),
-            ShopItem(id: "deco-pudding", cat: "deco", name: "冰爽布丁", price: 30, img: BearAssets.decoPudding, card: BearAssets.decoPudding),
-            ShopItem(id: "deco-cake", cat: "deco", name: "生日蛋糕", price: 25, img: BearAssets.decoCake, card: BearAssets.decoCake),
-            ShopItem(id: "deco-table", cat: "deco", name: "木桌黑灯", price: 40, img: BearAssets.decoTable, card: BearAssets.decoTable),
-            ShopItem(id: "deco-red", cat: "deco", name: "红柜甜甜圈灯", price: 45, img: BearAssets.decoRed, card: BearAssets.decoRed),
-            ShopItem(id: "deco-basket", cat: "deco", name: "猫篮落地灯", price: 45, img: BearAssets.decoBasket, card: BearAssets.decoBasket),
+            ShopItem(id: "decoBlueLamp", cat: "deco", name: "青苹落地灯", price: 20, img: BearAssets.decoBlueLamp, card: BearAssets.decoBlueLamp),
+            ShopItem(id: "decoProfLamp", cat: "deco", name: "黑铁工作灯", price: 20, img: BearAssets.decoProfLamp, card: BearAssets.decoProfLamp),
+            ShopItem(id: "decoVintageLamp", cat: "deco", name: "复古流苏灯", price: 25, img: BearAssets.decoVintageLamp, card: BearAssets.decoVintageLamp),
+            ShopItem(id: "decoDonut", cat: "deco", name: "甜甜圈气球灯", price: 25, img: BearAssets.decoDonut, card: BearAssets.decoDonut),
+            ShopItem(id: "decoBlueTable", cat: "deco", name: "小圆茶几", price: 20, img: BearAssets.decoBlueTable, card: BearAssets.decoBlueTable),
+            ShopItem(id: "decoProfTable", cat: "deco", name: "木边桌", price: 20, img: BearAssets.decoProfTable, card: BearAssets.decoProfTable),
+            ShopItem(id: "decoRedCab", cat: "deco", name: "复古红柜", price: 25, img: BearAssets.decoRedCab, card: BearAssets.decoRedCab),
+            ShopItem(id: "decoCatBasket", cat: "deco", name: "猫篮窝", price: 25, img: BearAssets.decoCatBasket, card: BearAssets.decoCatBasket),
+            ShopItem(id: "decoSundae", cat: "deco", name: "冰爽布丁", price: 20, img: BearAssets.decoSundae, card: BearAssets.decoSundae),
+            ShopItem(id: "decoSpoon", cat: "deco", name: "猫耳木勺", price: 10, img: BearAssets.decoSpoon, card: BearAssets.decoSpoon),
+            ShopItem(id: "decoCake", cat: "deco", name: "生日蛋糕", price: 25, img: BearAssets.decoCake, card: BearAssets.decoCake),
         ]
     }
 
@@ -44,7 +134,6 @@ struct RoomView: View {
             Color(red: 1.0, green: 0.965, blue: 0.925).ignoresSafeArea()
 
             VStack(spacing: 10) {
-                // 状态栏
                 HStack {
                     Label("\(store.honey) 🍯", systemImage: "drop.fill")
                     Spacer()
@@ -60,11 +149,12 @@ struct RoomView: View {
                 .foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
                 .padding(.horizontal).padding(.top, 8)
 
-                // 预览舞台
-                previewStage
+                BearRoomScene(height: 300)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .overlay(RoundedRectangle(cornerRadius: 24)
+                        .stroke(Color(red: 0.922, green: 0.863, blue: 0.784), lineWidth: 2))
                     .padding(.horizontal)
 
-                // 分类标签
                 HStack(spacing: 10) {
                     ForEach(cats, id: \.0) { c in
                         Button(action: { cat = c.0 }) {
@@ -85,7 +175,6 @@ struct RoomView: View {
                 }
                 .padding(.horizontal)
 
-                // 商品横滑
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(allItems.filter { $0.cat == cat }) { item in
@@ -101,7 +190,6 @@ struct RoomView: View {
                     .padding(.bottom, 8)
             }
 
-            // 庆祝动画
             if showCheer {
                 VStack {
                     Spacer()
@@ -129,75 +217,6 @@ struct RoomView: View {
         }
     }
 
-    // MARK: 预览舞台
-    var previewStage: some View {
-        GeometryReader { g -> AnyView in
-            let w = g.size.width
-            return AnyView(ZStack {
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(Color(red: 0.996, green: 0.965, blue: 0.918))
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(Color(red: 0.922, green: 0.863, blue: 0.784), lineWidth: 2)
-
-                if (store.equipped["rug"] ?? "none") != "none" {
-                    rugView.position(x: w/2, y: 228)
-                }
-                tableView.position(x: w*0.17, y: 205)
-                if (store.equipped["deco"] ?? "none") != "none" {
-                    decoView.position(x: w*0.68, y: 96)
-                }
-                seatView.position(x: w/2, y: 158)
-                ForEach(0..<store.trash, id: \.self) { i in
-                    Image(uiImage: BearAssets.trashBall)
-                        .resizable().frame(width: 38, height: 38)
-                        .position(x: w*(0.76 + 0.08*CGFloat(i % 3)),
-                                  y: 250 + 8*CGFloat(i / 3))
-                }
-            })
-        }
-        .frame(height: 300)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-    }
-
-    var rugView: some View {
-        let id = store.equipped["rug"] ?? "none"
-        let img: UIImage = id == "rug-cookie" ? BearAssets.rugCookie
-                         : id == "rug-pink" ? BearAssets.rugPink
-                         : id == "rug-leaf" ? BearAssets.rugLeaf
-                         : BearAssets.rugPurple
-        return Image(uiImage: img).resizable().scaledToFit().frame(width: 330)
-    }
-
-    var decoView: some View {
-        let id = store.equipped["deco"] ?? "none"
-        let img: UIImage = id == "deco-cake" ? BearAssets.decoCake
-                         : id == "deco-table" ? BearAssets.decoTable
-                         : id == "deco-red" ? BearAssets.decoRed
-                         : id == "deco-basket" ? BearAssets.decoBasket
-                         : id == "deco-table2" ? BearAssets.decoTable2
-                         : id == "deco-blue" ? BearAssets.decoBlue
-                         : id == "deco-pudding" ? BearAssets.decoPudding
-                         : BearAssets.lampDefault
-        let w: CGFloat = (id == "deco-cake" || id == "deco-lamp") ? 105
-                       : id == "deco-pudding" ? 140 : 175
-        return Image(uiImage: img).resizable().scaledToFit().frame(width: w)
-    }
-
-    var tableView: some View {
-        Image(uiImage: BearAssets.decoTable2)
-            .resizable().scaledToFit().frame(width: 130)
-    }
-
-    var seatView: some View {
-        let id = store.equipped["seat"] ?? "seat-default"
-        let img: UIImage = id == "seat-blue" ? BearAssets.seatBlue
-                         : id == "seat-brown" ? BearAssets.seatBrown
-                         : BearAssets.seatDefault
-        return Image(uiImage: img).resizable().scaledToFit()
-            .frame(maxWidth: 300, maxHeight: 245)
-    }
-
-    // MARK: 商品卡片
     func itemCard(_ it: ShopItem) -> some View {
         let owned = it.price == 0 || store.owned.contains(it.id)
         let isEquipped = store.equipped[it.cat] == it.id
@@ -205,34 +224,34 @@ struct RoomView: View {
             if isEquipped { return }
             if owned { store.equip(it.cat, it.id) } else { buy(it) }
         }) {
-        VStack(spacing: 6) {
-            if it.img.size.width == 0 {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(red: 0.98, green: 0.96, blue: 0.93))
-                    .frame(width: 84, height: 62)
-                    .overlay(Text("无").font(.caption).foregroundColor(.brown.opacity(0.4)))
-            } else {
-                Image(uiImage: it.card).resizable().scaledToFit().frame(width: 84, height: 62)
+            VStack(spacing: 6) {
+                if it.card.size.width == 0 {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(red: 0.98, green: 0.96, blue: 0.93))
+                        .frame(width: 84, height: 62)
+                        .overlay(Text("无").font(.caption).foregroundColor(.brown.opacity(0.4)))
+                } else {
+                    Image(uiImage: it.card).resizable().scaledToFit().frame(width: 84, height: 62)
+                }
+                Text(it.name).font(.caption).bold()
+                    .foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
+                    .lineLimit(1)
+                Text(isEquipped ? "✓ 已装备" : owned ? "点我装备" : "\(it.price) 🍯 购买")
+                    .font(.caption2).bold()
+                    .frame(width: 84, height: 24)
+                    .background(isEquipped ? Color.gray.opacity(0.25)
+                                : owned ? Color(red: 0.61, green: 0.80, blue: 0.53)
+                                : (store.honey >= it.price ? Color(red: 0.949, green: 0.702, blue: 0.239)
+                                                           : Color.gray.opacity(0.4)))
+                    .foregroundColor(isEquipped ? .gray
+                                     : owned ? Color(red: 0.24, green: 0.42, blue: 0.18)
+                                     : (store.honey >= it.price ? Color(red: 0.36, green: 0.23, blue: 0.09) : .white))
+                    .cornerRadius(12)
             }
-            Text(it.name).font(.caption).bold()
-                .foregroundColor(Color(red: 0.545, green: 0.369, blue: 0.235))
-                .lineLimit(1)
-            Text(isEquipped ? "✓ 已装备" : owned ? "点我装备" : "\(it.price) 🍯 购买")
-                .font(.caption2).bold()
-                .frame(width: 84, height: 24)
-                .background(isEquipped ? Color.gray.opacity(0.25)
-                            : owned ? Color(red: 0.61, green: 0.80, blue: 0.53)
-                            : (store.honey >= it.price ? Color(red: 0.949, green: 0.702, blue: 0.239)
-                                                       : Color.gray.opacity(0.4)))
-                .foregroundColor(isEquipped ? .gray
-                                 : owned ? Color(red: 0.24, green: 0.42, blue: 0.18)
-                                 : (store.honey >= it.price ? Color(red: 0.36, green: 0.23, blue: 0.09) : .white))
-                .cornerRadius(12)
-        }
-        .frame(width: 96)
-        .padding(.vertical, 8)
-        .background(Color.white.cornerRadius(16))
-        .shadow(color: .brown.opacity(0.08), radius: 6, y: 3)
+            .frame(width: 96)
+            .padding(.vertical, 8)
+            .background(Color.white.cornerRadius(16))
+            .shadow(color: .brown.opacity(0.08), radius: 6, y: 3)
         }
         .buttonStyle(.plain)
     }
