@@ -5,7 +5,7 @@ import UIKit
 struct NotesView: View {
     @ObservedObject private var notes = NotesStore.shared
     @State private var mode: NoteMode = .free
-    @FocusState private var freeFocused: Bool
+    @State private var showFullEditor = false
     @FocusState private var focusedTodo: UUID?
 
     private let ink = Color(red: 0.37, green: 0.27, blue: 0.30)
@@ -31,7 +31,6 @@ struct NotesView: View {
                     HStack(spacing: 12) {
                         ForEach(NoteMode.allCases, id: \.self) { item in
                             Button {
-                                freeFocused = false
                                 focusedTodo = nil
                                 mode = item
                             } label: {
@@ -77,18 +76,21 @@ struct NotesView: View {
                         // The left writing area deliberately avoids the illustrated boy.
                         // Lines are drawn beneath the editor, not embedded in the image.
                         ZStack(alignment: .topLeading) {
-                            RuledPaper(color: rule.opacity(0.65), spacing: 31)
-                                .allowsHitTesting(false)
-
                             if mode == .free {
-                                TextEditor(text: $notes.freeText)
-                                    .font(.system(size: 15, design: .rounded))
-                                    .lineSpacing(10)
-                                    .foregroundStyle(ink)
-                                    .scrollContentBackground(.hidden)
-                                    .background(Color.clear)
-                                    .focused($freeFocused)
-                                    .accessibilityLabel("自由便签内容")
+                                VStack(spacing: 4) {
+                                    // Read-only cloud preview: one text layout owns BOTH
+                                    // wrapping and ruled lines, including while scrolling.
+                                    LinedNoteTextView(text: $notes.freeText, editable: false)
+                                        .accessibilityLabel("自由便签预览")
+                                    Button {
+                                        showFullEditor = true
+                                    } label: {
+                                        Label("展开编辑", systemImage: "arrow.up.left.and.arrow.down.right")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundStyle(ink)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             } else {
                                 ScrollView {
                                     VStack(alignment: .leading, spacing: 8) {
@@ -100,7 +102,6 @@ struct NotesView: View {
                                                         .foregroundStyle(ink)
                                                 }
                                                 .buttonStyle(.plain)
-                                                .accessibilityLabel(todo.done ? "标记未完成" : "标记完成")
                                                 TextField("写下一件小事…", text: $todo.text, axis: .vertical)
                                                     .lineLimit(1...4)
                                                     .font(.system(size: 14))
@@ -113,7 +114,6 @@ struct NotesView: View {
                                                         .foregroundStyle(ink.opacity(0.55))
                                                 }
                                                 .buttonStyle(.plain)
-                                                .accessibilityLabel("删除待办")
                                             }
                                             .padding(.vertical, 5)
                                         }
@@ -125,7 +125,6 @@ struct NotesView: View {
                                                 .font(.system(size: 14, weight: .medium))
                                                 .foregroundStyle(ink)
                                         }
-                                        .padding(.top, 5)
                                     }
                                     .padding(.horizontal, 3)
                                 }
@@ -148,24 +147,113 @@ struct NotesView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
+            .sheet(isPresented: $showFullEditor) {
+                NavigationStack {
+                    LinedNoteTextView(text: $notes.freeText, editable: true)
+                        .padding(.horizontal, 18)
+                        .padding(.top, 12)
+                        .background(Color(red: 1, green: 0.96, blue: 0.96))
+                        .navigationTitle("我的自由记录")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("完成") { showFullEditor = false }
+                            }
+                        }
+                }
+            }
         }
     }
 }
 
-private struct RuledPaper: View {
-    let color: Color
-    let spacing: CGFloat
-    var body: some View {
-        Canvas { context, size in
-            var y: CGFloat = 30
-            while y < size.height {
-                var line = Path()
-                line.move(to: CGPoint(x: 0, y: y))
-                line.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(line, with: .color(color), lineWidth: 0.7)
-                y += spacing
-            }
+// UITextView controls wrapping and scrolling; its background line layer is
+// positioned from the SAME font metrics and content offset. No independent
+// SwiftUI line stack to drift across Chinese wrapped lines.
+private struct LinedNoteTextView: UIViewRepresentable {
+    @Binding var text: String
+    let editable: Bool
+
+    func makeUIView(context: Context) -> RuledUITextView {
+        let view = RuledUITextView()
+        view.delegate = context.coordinator
+        view.isEditable = editable
+        view.isSelectable = editable
+        view.backgroundColor = .clear
+        view.textColor = UIColor(red: 0.37, green: 0.27, blue: 0.30, alpha: 1)
+        view.font = UIFont.systemFont(ofSize: editable ? 17 : 15)
+        view.textContainerInset = UIEdgeInsets(top: 5, left: 0, bottom: 10, right: 0)
+        view.textContainer.lineFragmentPadding = 0
+        view.showsVerticalScrollIndicator = editable
+        view.alwaysBounceVertical = true
+        view.keyboardDismissMode = .interactive
+        view.apply(text: text)
+        return view
+    }
+
+    func updateUIView(_ view: RuledUITextView, context: Context) {
+        if view.isEditable != editable { view.isEditable = editable }
+        if view.text != text { view.apply(text: text) }
+        view.refreshLines()
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+    final class Coordinator: NSObject, UITextViewDelegate {
+        var parent: LinedNoteTextView
+        init(_ parent: LinedNoteTextView) { self.parent = parent }
+        func textViewDidChange(_ textView: UITextView) {
+            parent.text = textView.text
+            (textView as? RuledUITextView)?.refreshLines()
         }
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            (scrollView as? RuledUITextView)?.refreshLines()
+        }
+    }
+}
+
+private final class RuledUITextView: UITextView {
+    private let lines = CAShapeLayer()
+    private let lineGap: CGFloat = 11
+
+    override init(frame: CGRect, textContainer: NSTextContainer?) {
+        super.init(frame: frame, textContainer: textContainer)
+        lines.strokeColor = UIColor(red: 0.73, green: 0.59, blue: 0.60, alpha: 0.65).cgColor
+        lines.fillColor = nil
+        lines.lineWidth = 0.7
+        layer.insertSublayer(lines, at: 0)
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    func apply(text: String) {
+        let font = self.font ?? UIFont.systemFont(ofSize: 15)
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = lineGap
+        attributedText = NSAttributedString(string: text, attributes: [
+            .font: font, .foregroundColor: textColor ?? UIColor.darkGray,
+            .paragraphStyle: style
+        ])
+        refreshLines()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        refreshLines()
+    }
+
+    func refreshLines() {
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        let font = self.font ?? UIFont.systemFont(ofSize: 15)
+        let step = font.lineHeight + lineGap
+        let top = textContainerInset.top + font.lineHeight + 5 - contentOffset.y
+        let path = UIBezierPath()
+        var y = top.truncatingRemainder(dividingBy: step)
+        if y < 0 { y += step }
+        while y < bounds.height {
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: bounds.width, y: y))
+            y += step
+        }
+        lines.frame = bounds
+        lines.path = path.cgPath
     }
 }
 
