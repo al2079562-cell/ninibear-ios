@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // v0.2.2: transparent original decoration, full lavender page and ruled editable area.
 struct NotesView: View {
@@ -56,12 +57,22 @@ struct NotesView: View {
                             .frame(width: w, height: h)
                             .allowsHitTesting(false)
 
-                        Image("MemoDecoration")
-                            .resizable()
-                            .interpolation(.high)
-                            .frame(width: w, height: h)
-                            .allowsHitTesting(false)
-                            .accessibilityHidden(true)
+                        // Prefer the directly bundled PNG. This avoids relying solely
+                        // on asset-catalog compilation (which failed on the test IPA).
+                        if let decoration = MemoDecorationLoader.image {
+                            Image(uiImage: decoration)
+                                .resizable()
+                                .interpolation(.high)
+                                .frame(width: w, height: h)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        } else {
+                            Text("便签插画资源未加载，请检查 memo-decoration.png 是否上传到项目根目录")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.red)
+                                .frame(width: w * 0.8, height: 50)
+                                .position(x: w * 0.5, y: h * 0.13)
+                        }
 
                         // The left writing area deliberately avoids the illustrated boy.
                         // Lines are drawn beneath the editor, not embedded in the image.
@@ -124,8 +135,9 @@ struct NotesView: View {
                         .frame(width: w * 0.45, height: h * 0.47)
                         .position(x: w * 0.365, y: h * 0.505)
                     }
-                    .aspectRatio(1.015, contentMode: .fit)
+                    .aspectRatio(2048.0 / 2016.0, contentMode: .fit)
                     .padding(.horizontal, 2)
+                    .padding(.top, 78) // shift square illustration toward screen center, no stretching
 
                     Text("每一件小事，都值得被好好记住 ♡")
                         .font(.system(size: 12))
@@ -186,4 +198,16 @@ private struct MemoCloudPaper: Shape {
         path.closeSubpath()
         return path
     }
+}
+
+
+// Resolve both resource delivery paths. A root-level PNG is the primary path;
+// the xcassets image is kept as a secondary fallback for existing projects.
+private enum MemoDecorationLoader {
+    static let image: UIImage? = {
+        if let url = Bundle.main.url(forResource: "memo-decoration", withExtension: "png"),
+           let image = UIImage(contentsOfFile: url.path) { return image }
+        if let image = UIImage(named: "memo-decoration") { return image }
+        return UIImage(named: "MemoDecoration")
+    }()
 }
